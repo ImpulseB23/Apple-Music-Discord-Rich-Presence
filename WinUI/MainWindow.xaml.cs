@@ -19,7 +19,7 @@ public sealed partial class MainWindow : Window
 {
     private AppWindow? _appWindow;
     private bool _isMiniMode;
-    private SizeInt32 _normalSize = new(850, 550);
+    private SizeInt32 _normalSize = new(1000, 650);
     private PointInt32 _normalPosition;
     private static readonly SizeInt32 MiniSize = new(300, 80);
     private bool _isReallyClosing;
@@ -161,7 +161,7 @@ public sealed partial class MainWindow : Window
 
         if (_appWindow != null)
         {
-            _appWindow.Resize(new SizeInt32(850, 550));
+            _appWindow.Resize(new SizeInt32(1000, 650));
 
             if (AppWindowTitleBar.IsCustomizationSupported())
             {
@@ -215,11 +215,20 @@ public sealed partial class MainWindow : Window
 
     private void Window_Closed(object sender, WindowEventArgs args)
     {
-        // Prevent closing, minimize to taskbar instead
-        if (!_isReallyClosing)
+        // Check if close-to-tray is disabled
+        var config = ConfigService.Load();
+        if (!_isReallyClosing && config.MinimizeToTrayOnClose)
         {
             args.Handled = true;
-            ShowWindow(_hwnd, SW_HIDE);
+            HideWindow();
+        }
+        // If MinimizeToTrayOnClose is false, allow the window to close normally
+        // which will trigger the app exit
+        else if (!_isReallyClosing && !config.MinimizeToTrayOnClose)
+        {
+            _isReallyClosing = true;
+            // Exit the app
+            (Microsoft.UI.Xaml.Application.Current as App)?.ExitApp();
         }
     }
 
@@ -227,6 +236,13 @@ public sealed partial class MainWindow : Window
     {
         ShowWindow(_hwnd, SW_SHOW);
         _appWindow?.Show();
+        (Microsoft.UI.Xaml.Application.Current as App)?.NotifyWindowShown();
+    }
+
+    public void HideWindow()
+    {
+        ShowWindow(_hwnd, SW_HIDE);
+        (Microsoft.UI.Xaml.Application.Current as App)?.NotifyWindowHidden();
     }
 
     public void ReallyClose()

@@ -48,6 +48,36 @@
                     OffContent="Off"
                     OnContent="On"
                     Toggled="CompactMode_Toggled" />
+
+                <ToggleSwitch
+                    x:Name="MinimizeToTrayToggle"
+                    Header="Minimize to tray when closing"
+                    OffContent="Exit app"
+                    OnContent="Minimize"
+                    Toggled="MinimizeToTray_Toggled" />
+
+                <ToggleSwitch
+                    x:Name="StartMinimizedToggle"
+                    Header="Start minimized to tray"
+                    OffContent="Off"
+                    OnContent="On"
+                    Toggled="StartMinimized_Toggled" />
+            </StackPanel>
+
+            <!-- Updates -->
+            <StackPanel Spacing="12">
+                <TextBlock
+                    Text="UPDATES"
+                    Style="{StaticResource CaptionTextBlockStyle}"
+                    Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                    CharacterSpacing="60" />
+
+                <ToggleSwitch
+                    x:Name="CheckUpdatesToggle"
+                    Header="Check for updates automatically"
+                    OffContent="Off"
+                    OnContent="On"
+                    Toggled="CheckUpdates_Toggled" />
             </StackPanel>
 
             <!-- Sidebar Options -->

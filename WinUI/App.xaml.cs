@@ -1,73 +1,85 @@
 using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Controls;
 using System;
 using System.Diagnostics;
-using System.Drawing;
 using System.IO;
-using System.Windows.Forms;
+using System.Drawing;
+using System.Windows.Input;
+using H.NotifyIcon;
+using H.NotifyIcon.Core;
 using AppleMusicRpc.Services;
 
 namespace AppleMusicRpc;
 
-public partial class App : Microsoft.UI.Xaml.Application
+public partial class App : Application
 {
     private MainWindow? _window;
-    private NotifyIcon? _trayIcon;
-    private ContextMenuStrip? _contextMenu;
-    private ToolStripMenuItem? _nowPlayingItem;
-    private ToolStripMenuItem? _pauseResumeItem;
-    private ToolStripMenuItem? _openInAppleMusicItem;
+    private TaskbarIcon? _trayIcon;
+    private MenuFlyout? _contextMenu;
+    private MenuFlyoutItem? _nowPlayingItem;
+    private MenuFlyoutItem? _pauseResumeItem;
+    private MenuFlyoutItem? _showHideItem;
+    private MenuFlyoutItem? _miniModeItem;
+    private bool _isWindowVisible = true;
+    private bool _isInMiniMode = false;
 
     public App()
     {
         InitializeComponent();
     }
 
-    protected override void OnLaunched(LaunchActivatedEventArgs args)
+    protected override async void OnLaunched(LaunchActivatedEventArgs args)
     {
         _window = new MainWindow();
-        _window.Activate();
+
+        var config = ConfigService.Load();
+
+        // Start minimized to tray if configured
+        if (config.StartMinimizedToTray)
+        {
+            // Don't activate the window, just set it up
+            _isWindowVisible = false;
+        }
+        else
+        {
+            _window.Activate();
+        }
+
         SetupTrayIcon();
 
         // Subscribe to track changes for tray updates
         RpcService.Instance.TrackChanged += OnTrackChanged;
         RpcService.Instance.StatusChanged += OnStatusChanged;
+
+        // Check for updates if enabled
+        if (config.CheckForUpdatesAutomatically)
+        {
+            await UpdateService.Instance.CheckForUpdatesAsync();
+        }
     }
 
     private void SetupTrayIcon()
     {
-        _trayIcon = new NotifyIcon();
-
-        // Load icon
-        try
-        {
-            var iconPath = Path.Combine(AppContext.BaseDirectory, "Assets", "Icon.ico");
-            if (File.Exists(iconPath))
-                _trayIcon.Icon = new Icon(iconPath);
-            else
-                _trayIcon.Icon = SystemIcons.Application;
-        }
-        catch
-        {
-            _trayIcon.Icon = SystemIcons.Application;
-        }
-
-        _trayIcon.Text = "Apple Music Discord RPC";
-        _trayIcon.Visible = true;
-
-        // Build context menu
-        _contextMenu = new ContextMenuStrip();
-        _contextMenu.Renderer = new ModernMenuRenderer();
+        // Build context menu with WinUI MenuFlyout (modern Windows 11 style)
+        _contextMenu = new MenuFlyout();
 
         // Now Playing header (disabled, shows current track)
-        _nowPlayingItem = new ToolStripMenuItem("Not Playing");
-        _nowPlayingItem.Enabled = false;
-        _nowPlayingItem.Font = new Font("Segoe UI", 9, FontStyle.Bold);
+        _nowPlayingItem = new MenuFlyoutItem
+        {
+            Text = "Not Playing",
+            IsEnabled = false,
+            FontWeight = Microsoft.UI.Text.FontWeights.Bold
+        };
         _contextMenu.Items.Add(_nowPlayingItem);
 
-        _contextMenu.Items.Add(new ToolStripSeparator());
+        _contextMenu.Items.Add(new MenuFlyoutSeparator());
 
         // Pause/Resume RPC
-        _pauseResumeItem = new ToolStripMenuItem("Pause RPC");
+        _pauseResumeItem = new MenuFlyoutItem
+        {
+            Text = "Pause RPC",
+            Icon = new FontIcon { Glyph = "\uE769" }
+        };
         _pauseResumeItem.Click += (s, e) =>
         {
             if (RpcService.Instance.IsPaused)
@@ -78,90 +90,173 @@ public partial class App : Microsoft.UI.Xaml.Application
         };
         _contextMenu.Items.Add(_pauseResumeItem);
 
-        // Open in Apple Music (hidden when no track)
-        _openInAppleMusicItem = new ToolStripMenuItem("Play on Apple Music");
-        _openInAppleMusicItem.Click += (s, e) =>
+        _contextMenu.Items.Add(new MenuFlyoutSeparator());
+
+        // Show/Hide Window - changes based on window visibility
+        _showHideItem = new MenuFlyoutItem
         {
-            var url = RpcService.Instance.CurrentTrack?.AppleMusicUrl;
-            if (!string.IsNullOrEmpty(url))
-            {
-                Process.Start(new ProcessStartInfo(url) { UseShellExecute = true });
-            }
+            Text = "Minimize",
+            Icon = new FontIcon { Glyph = "\uE921" },
+            FontWeight = Microsoft.UI.Text.FontWeights.SemiBold
         };
-        _openInAppleMusicItem.Visible = false;
-        _contextMenu.Items.Add(_openInAppleMusicItem);
-
-        _contextMenu.Items.Add(new ToolStripSeparator());
-
-        // Show Window
-        var showItem = new ToolStripMenuItem("Open App");
-        showItem.Click += (s, e) => _window?.ShowWindow();
-        _contextMenu.Items.Add(showItem);
+        _showHideItem.Click += (s, e) => ToggleWindowVisibility();
+        _contextMenu.Items.Add(_showHideItem);
 
         // Mini Mode toggle
-        var miniModeItem = new ToolStripMenuItem("Mini Mode");
-        miniModeItem.Click += (s, e) =>
+        _miniModeItem = new MenuFlyoutItem
         {
-            _window?.ShowWindow();
-            // Toggle mini mode via the public method
-            typeof(MainWindow).GetMethod("ToggleMiniMode",
-                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
-                ?.Invoke(_window, null);
+            Text = "Mini Mode",
+            Icon = new FontIcon { Glyph = "\uE73F" }
         };
-        _contextMenu.Items.Add(miniModeItem);
+        _miniModeItem.Click += (s, e) =>
+        {
+            ShowWindowInternal();
+            ToggleMiniMode();
+        };
+        _contextMenu.Items.Add(_miniModeItem);
 
-        _contextMenu.Items.Add(new ToolStripSeparator());
+        _contextMenu.Items.Add(new MenuFlyoutSeparator());
 
         // Exit
-        var exitItem = new ToolStripMenuItem("Exit");
+        var exitItem = new MenuFlyoutItem
+        {
+            Text = "Exit",
+            Icon = new FontIcon { Glyph = "\uE7E8" }
+        };
         exitItem.Click += (s, e) => ExitApp();
         _contextMenu.Items.Add(exitItem);
 
-        _trayIcon.ContextMenuStrip = _contextMenu;
+        // Create TaskbarIcon
+        _trayIcon = new TaskbarIcon
+        {
+            ToolTipText = "Apple Music Discord RPC",
+            ContextMenuMode = ContextMenuMode.PopupMenu,
+            ContextFlyout = _contextMenu
+        };
 
-        // Double-click to show
-        _trayIcon.DoubleClick += (s, e) => _window?.ShowWindow();
+        // Set icon from file
+        var iconPath = Path.Combine(AppContext.BaseDirectory, "Assets", "Icon.ico");
+        if (File.Exists(iconPath))
+        {
+            _trayIcon.Icon = new Icon(iconPath);
+        }
+
+        // Double-click to toggle visibility
+        _trayIcon.DoubleClickCommand = new RelayCommand(ToggleWindowVisibility);
+
+        // Ensure the tray icon is created
+        _trayIcon.ForceCreate();
+    }
+
+    private void ToggleMiniMode()
+    {
+        // Toggle mini mode via the public method
+        typeof(MainWindow).GetMethod("ToggleMiniMode",
+            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
+            ?.Invoke(_window, null);
+
+        _isInMiniMode = !_isInMiniMode;
+        UpdateMiniModeText();
+    }
+
+    private void UpdateMiniModeText()
+    {
+        if (_miniModeItem == null) return;
+        _miniModeItem.Text = _isInMiniMode ? "Normal Mode" : "Mini Mode";
+        _miniModeItem.Icon = new FontIcon { Glyph = _isInMiniMode ? "\uE740" : "\uE73F" };
+    }
+
+    private void ToggleWindowVisibility()
+    {
+        if (_isWindowVisible)
+        {
+            HideWindowInternal();
+        }
+        else
+        {
+            ShowWindowInternal();
+        }
+    }
+
+    private void ShowWindowInternal()
+    {
+        _window?.ShowWindow();
+        _isWindowVisible = true;
+        UpdateShowHideText();
+    }
+
+    private void HideWindowInternal()
+    {
+        _window?.HideWindow();
+        _isWindowVisible = false;
+        UpdateShowHideText();
+    }
+
+    private void UpdateShowHideText()
+    {
+        if (_showHideItem == null) return;
+        _showHideItem.Text = _isWindowVisible ? "Minimize" : "Open";
+        _showHideItem.Icon = new FontIcon { Glyph = _isWindowVisible ? "\uE921" : "\uE8A7" };
+    }
+
+    public void NotifyWindowHidden()
+    {
+        _isWindowVisible = false;
+        UpdateShowHideText();
+    }
+
+    public void NotifyWindowShown()
+    {
+        _isWindowVisible = true;
+        UpdateShowHideText();
+    }
+
+    public void NotifyMiniModeChanged(bool isInMiniMode)
+    {
+        _isInMiniMode = isInMiniMode;
+        _window?.DispatcherQueue.TryEnqueue(UpdateMiniModeText);
     }
 
     private void OnTrackChanged(TrackInfo? track)
     {
-        if (_nowPlayingItem == null || _openInAppleMusicItem == null) return;
+        if (_nowPlayingItem == null || _trayIcon == null) return;
 
-        if (track != null)
+        // Need to dispatch to UI thread
+        _window?.DispatcherQueue.TryEnqueue(() =>
         {
-            // Update tooltip with track info
-            var tooltip = $"{track.Title}\n{track.Artist}";
-            if (tooltip.Length > 63) tooltip = tooltip[..60] + "...";
-            if (_trayIcon != null) _trayIcon.Text = tooltip;
+            if (track != null)
+            {
+                // Update tooltip with track info
+                var tooltip = $"{track.Title}\n{track.Artist}";
+                if (tooltip.Length > 63) tooltip = tooltip[..60] + "...";
+                _trayIcon.ToolTipText = tooltip;
 
-            // Update now playing menu item
-            var displayText = $"{track.Artist} — {track.Title}";
-            if (displayText.Length > 40) displayText = displayText[..37] + "...";
-            _nowPlayingItem.Text = displayText;
-
-            // Show Open in Apple Music if URL is available
-            _openInAppleMusicItem.Visible = !string.IsNullOrEmpty(track.AppleMusicUrl);
-        }
-        else
-        {
-            if (_trayIcon != null) _trayIcon.Text = "Apple Music Discord RPC";
-            _nowPlayingItem.Text = "Not Playing";
-            _openInAppleMusicItem.Visible = false;
-        }
+                // Update now playing menu item
+                var displayText = $"{track.Artist} — {track.Title}";
+                if (displayText.Length > 40) displayText = displayText[..37] + "...";
+                _nowPlayingItem.Text = displayText;
+            }
+            else
+            {
+                _trayIcon.ToolTipText = "Apple Music Discord RPC";
+                _nowPlayingItem.Text = "Not Playing";
+            }
+        });
     }
 
     private void OnStatusChanged(string status, bool isError)
     {
-        UpdatePauseResumeText();
+        _window?.DispatcherQueue.TryEnqueue(UpdatePauseResumeText);
     }
 
     private void UpdatePauseResumeText()
     {
         if (_pauseResumeItem == null) return;
         _pauseResumeItem.Text = RpcService.Instance.IsPaused ? "Resume RPC" : "Pause RPC";
+        _pauseResumeItem.Icon = new FontIcon { Glyph = RpcService.Instance.IsPaused ? "\uE768" : "\uE769" };
     }
 
-    private void ExitApp()
+    internal void ExitApp()
     {
         RpcService.Instance.TrackChanged -= OnTrackChanged;
         RpcService.Instance.StatusChanged -= OnStatusChanged;
@@ -174,21 +269,12 @@ public partial class App : Microsoft.UI.Xaml.Application
     public static MainWindow? MainWindow => (Current as App)?._window;
 }
 
-// Custom renderer for a more modern look
-internal class ModernMenuRenderer : ToolStripProfessionalRenderer
+// Simple RelayCommand implementation
+public class RelayCommand : ICommand
 {
-    public ModernMenuRenderer() : base(new ModernColorTable()) { }
-}
-
-internal class ModernColorTable : ProfessionalColorTable
-{
-    public override Color MenuItemSelected => Color.FromArgb(50, 50, 50);
-    public override Color MenuItemBorder => Color.FromArgb(60, 60, 60);
-    public override Color MenuBorder => Color.FromArgb(45, 45, 45);
-    public override Color ToolStripDropDownBackground => Color.FromArgb(32, 32, 32);
-    public override Color ImageMarginGradientBegin => Color.FromArgb(32, 32, 32);
-    public override Color ImageMarginGradientMiddle => Color.FromArgb(32, 32, 32);
-    public override Color ImageMarginGradientEnd => Color.FromArgb(32, 32, 32);
-    public override Color SeparatorDark => Color.FromArgb(60, 60, 60);
-    public override Color SeparatorLight => Color.FromArgb(60, 60, 60);
+    private readonly Action _execute;
+    public RelayCommand(Action execute) => _execute = execute;
+    public event EventHandler? CanExecuteChanged;
+    public bool CanExecute(object? parameter) => true;
+    public void Execute(object? parameter) => _execute();
 }

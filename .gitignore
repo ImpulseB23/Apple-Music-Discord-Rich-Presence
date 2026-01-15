@@ -12,6 +12,7 @@ dist/
 release/
 *.zip
 AppleMusicRPC-Setup.exe
+installer.iss
 
 # Logs
 *.log

@@ -16,6 +16,9 @@ public class AppConfig
     public bool AlwaysOnTop { get; set; }
     public bool StartInMiniMode { get; set; }
     public bool StartWithExpandedSidebar { get; set; }
+    public bool MinimizeToTrayOnClose { get; set; } = true;
+    public bool StartMinimizedToTray { get; set; }
+    public bool CheckForUpdatesAutomatically { get; set; } = true;
 
     // Hotkey settings (format: "Ctrl+Alt+M")
     public string HotkeyMiniMode { get; set; } = "Ctrl+Alt+M";
@@ -56,6 +59,9 @@ public static class ConfigService
                     case "always_on_top": cfg.AlwaysOnTop = v.ToLower() == "true"; break;
                     case "start_in_mini_mode": cfg.StartInMiniMode = v.ToLower() == "true"; break;
                     case "start_expanded_sidebar": cfg.StartWithExpandedSidebar = v.ToLower() == "true"; break;
+                    case "minimize_to_tray_on_close": cfg.MinimizeToTrayOnClose = v.ToLower() != "false"; break;
+                    case "start_minimized_to_tray": cfg.StartMinimizedToTray = v.ToLower() == "true"; break;
+                    case "check_for_updates": cfg.CheckForUpdatesAutomatically = v.ToLower() != "false"; break;
                     case "hotkey_mini_mode": cfg.HotkeyMiniMode = v; break;
                     case "hotkey_pause_rpc": cfg.HotkeyPauseRpc = v; break;
                 }
@@ -86,6 +92,9 @@ public static class ConfigService
                 $"always_on_top = {cfg.AlwaysOnTop.ToString().ToLower()}",
                 $"start_in_mini_mode = {cfg.StartInMiniMode.ToString().ToLower()}",
                 $"start_expanded_sidebar = {cfg.StartWithExpandedSidebar.ToString().ToLower()}",
+                $"minimize_to_tray_on_close = {cfg.MinimizeToTrayOnClose.ToString().ToLower()}",
+                $"start_minimized_to_tray = {cfg.StartMinimizedToTray.ToString().ToLower()}",
+                $"check_for_updates = {cfg.CheckForUpdatesAutomatically.ToString().ToLower()}",
                 "",
                 "[Hotkeys]",
                 $"hotkey_mini_mode = {cfg.HotkeyMiniMode}",

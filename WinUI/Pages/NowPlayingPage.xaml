@@ -32,9 +32,7 @@
                 Grid.Column="0"
                 Width="140" Height="140"
                 CornerRadius="8"
-                Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
-                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
-                BorderThickness="1">
+                Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
                 <Grid>
                     <FontIcon
                         x:Name="PlaceholderIcon"

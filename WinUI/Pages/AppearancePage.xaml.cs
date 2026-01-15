@@ -41,6 +41,9 @@ public sealed partial class AppearancePage : Page
         AlwaysOnTopToggle.IsOn = _config.AlwaysOnTop;
         CompactModeToggle.IsOn = _config.StartInMiniMode;
         ExpandedSidebarToggle.IsOn = _config.StartWithExpandedSidebar;
+        MinimizeToTrayToggle.IsOn = _config.MinimizeToTrayOnClose;
+        StartMinimizedToggle.IsOn = _config.StartMinimizedToTray;
+        CheckUpdatesToggle.IsOn = _config.CheckForUpdatesAutomatically;
     }
 
     private void ThemeSelector_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -86,6 +89,30 @@ public sealed partial class AppearancePage : Page
         if (_isLoading) return;
 
         _config.StartWithExpandedSidebar = ExpandedSidebarToggle.IsOn;
+        ConfigService.Save(_config);
+    }
+
+    private void MinimizeToTray_Toggled(object sender, RoutedEventArgs e)
+    {
+        if (_isLoading) return;
+
+        _config.MinimizeToTrayOnClose = MinimizeToTrayToggle.IsOn;
+        ConfigService.Save(_config);
+    }
+
+    private void StartMinimized_Toggled(object sender, RoutedEventArgs e)
+    {
+        if (_isLoading) return;
+
+        _config.StartMinimizedToTray = StartMinimizedToggle.IsOn;
+        ConfigService.Save(_config);
+    }
+
+    private void CheckUpdates_Toggled(object sender, RoutedEventArgs e)
+    {
+        if (_isLoading) return;
+
+        _config.CheckForUpdatesAutomatically = CheckUpdatesToggle.IsOn;
         ConfigService.Save(_config);
     }
 }
