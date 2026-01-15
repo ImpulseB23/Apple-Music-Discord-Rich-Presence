@@ -10,6 +10,7 @@ obj/
 publish/
 dist/
 release/
+Output/
 *.zip
 AppleMusicRPC-Setup.exe
 installer.iss

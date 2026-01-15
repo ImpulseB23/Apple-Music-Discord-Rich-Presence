@@ -6,7 +6,6 @@ using System.IO;
 using System.Drawing;
 using System.Windows.Input;
 using H.NotifyIcon;
-using H.NotifyIcon.Core;
 using AppleMusicRpc.Services;
 
 namespace AppleMusicRpc;
@@ -34,8 +33,12 @@ public partial class App : Application
 
         var config = ConfigService.Load();
 
-        // Start minimized to tray if configured
-        if (config.StartMinimizedToTray)
+        // Check for --show argument (used by installer to force window open)
+        var cmdArgs = Environment.GetCommandLineArgs();
+        bool forceShow = Array.Exists(cmdArgs, arg => arg.Equals("--show", StringComparison.OrdinalIgnoreCase));
+
+        // Start minimized to tray if configured, unless --show is passed
+        if (config.StartMinimizedToTray && !forceShow)
         {
             // Don't activate the window, just set it up
             _isWindowVisible = false;
@@ -60,77 +63,58 @@ public partial class App : Application
 
     private void SetupTrayIcon()
     {
-        // Build context menu with WinUI MenuFlyout (modern Windows 11 style)
+        // Build context menu with MenuFlyout
         _contextMenu = new MenuFlyout();
 
         // Now Playing header (disabled, shows current track)
         _nowPlayingItem = new MenuFlyoutItem
         {
             Text = "Not Playing",
-            IsEnabled = false,
-            FontWeight = Microsoft.UI.Text.FontWeights.Bold
+            IsEnabled = false
         };
         _contextMenu.Items.Add(_nowPlayingItem);
 
         _contextMenu.Items.Add(new MenuFlyoutSeparator());
 
-        // Pause/Resume RPC
-        _pauseResumeItem = new MenuFlyoutItem
-        {
-            Text = "Pause RPC",
-            Icon = new FontIcon { Glyph = "\uE769" }
-        };
-        _pauseResumeItem.Click += (s, e) =>
+        // Pause/Resume RPC - use Command
+        _pauseResumeItem = new MenuFlyoutItem { Text = "Pause RPC" };
+        _pauseResumeItem.Command = new RelayCommand(() =>
         {
             if (RpcService.Instance.IsPaused)
                 RpcService.Instance.Resume();
             else
                 RpcService.Instance.Pause();
             UpdatePauseResumeText();
-        };
+        });
         _contextMenu.Items.Add(_pauseResumeItem);
 
         _contextMenu.Items.Add(new MenuFlyoutSeparator());
 
-        // Show/Hide Window - changes based on window visibility
-        _showHideItem = new MenuFlyoutItem
-        {
-            Text = "Minimize",
-            Icon = new FontIcon { Glyph = "\uE921" },
-            FontWeight = Microsoft.UI.Text.FontWeights.SemiBold
-        };
-        _showHideItem.Click += (s, e) => ToggleWindowVisibility();
+        // Show/Hide Window - use Command
+        _showHideItem = new MenuFlyoutItem { Text = "Open" };
+        _showHideItem.Command = new RelayCommand(ToggleWindowVisibility);
         _contextMenu.Items.Add(_showHideItem);
 
-        // Mini Mode toggle
-        _miniModeItem = new MenuFlyoutItem
-        {
-            Text = "Mini Mode",
-            Icon = new FontIcon { Glyph = "\uE73F" }
-        };
-        _miniModeItem.Click += (s, e) =>
+        // Mini Mode toggle - use Command
+        _miniModeItem = new MenuFlyoutItem { Text = "Mini Mode" };
+        _miniModeItem.Command = new RelayCommand(() =>
         {
             ShowWindowInternal();
             ToggleMiniMode();
-        };
+        });
         _contextMenu.Items.Add(_miniModeItem);
 
         _contextMenu.Items.Add(new MenuFlyoutSeparator());
 
-        // Exit
-        var exitItem = new MenuFlyoutItem
-        {
-            Text = "Exit",
-            Icon = new FontIcon { Glyph = "\uE7E8" }
-        };
-        exitItem.Click += (s, e) => ExitApp();
+        // Exit - use Command
+        var exitItem = new MenuFlyoutItem { Text = "Exit" };
+        exitItem.Command = new RelayCommand(ExitApp);
         _contextMenu.Items.Add(exitItem);
 
-        // Create TaskbarIcon
+        // Create TaskbarIcon with MenuFlyout
         _trayIcon = new TaskbarIcon
         {
             ToolTipText = "Apple Music Discord RPC",
-            ContextMenuMode = ContextMenuMode.PopupMenu,
             ContextFlyout = _contextMenu
         };
 
@@ -163,7 +147,11 @@ public partial class App : Application
     {
         if (_miniModeItem == null) return;
         _miniModeItem.Text = _isInMiniMode ? "Normal Mode" : "Mini Mode";
-        _miniModeItem.Icon = new FontIcon { Glyph = _isInMiniMode ? "\uE740" : "\uE73F" };
+        _miniModeItem.Command = new RelayCommand(() =>
+        {
+            ShowWindowInternal();
+            ToggleMiniMode();
+        });
     }
 
     private void ToggleWindowVisibility()
@@ -196,7 +184,7 @@ public partial class App : Application
     {
         if (_showHideItem == null) return;
         _showHideItem.Text = _isWindowVisible ? "Minimize" : "Open";
-        _showHideItem.Icon = new FontIcon { Glyph = _isWindowVisible ? "\uE921" : "\uE8A7" };
+        _showHideItem.Command = new RelayCommand(ToggleWindowVisibility);
     }
 
     public void NotifyWindowHidden()
@@ -253,7 +241,14 @@ public partial class App : Application
     {
         if (_pauseResumeItem == null) return;
         _pauseResumeItem.Text = RpcService.Instance.IsPaused ? "Resume RPC" : "Pause RPC";
-        _pauseResumeItem.Icon = new FontIcon { Glyph = RpcService.Instance.IsPaused ? "\uE768" : "\uE769" };
+        _pauseResumeItem.Command = new RelayCommand(() =>
+        {
+            if (RpcService.Instance.IsPaused)
+                RpcService.Instance.Resume();
+            else
+                RpcService.Instance.Pause();
+            UpdatePauseResumeText();
+        });
     }
 
     internal void ExitApp()

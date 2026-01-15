@@ -21,7 +21,7 @@ Display your Apple Music listening activity on Discord with album art, progress 
 
 ## Screenshots
 
-*Coming soon*
+![Apple Music Discord RPC](assets/screenshot.png)
 
 ## Requirements
 
