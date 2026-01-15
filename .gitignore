@@ -1,0 +1,45 @@
+# Configuration with secrets
+config.ini
+
+# Secrets file - developers must create their own from Secrets.example.cs
+WinUI/Services/Secrets.cs
+
+# Build output
+bin/
+obj/
+publish/
+dist/
+release/
+*.zip
+AppleMusicRPC-Setup.exe
+
+# Logs
+*.log
+debug.log
+apple_music_rpc.log
+
+# IDE
+.vs/
+.vscode/
+*.user
+*.suo
+*.sln.user
+.idea/
+
+# Python legacy
+venv/
+__pycache__/
+*.pyc
+*.pyo
+.env
+.python-version
+
+# OS generated files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Backup files
+*.bak
+*.tmp
+*~

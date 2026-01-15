@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Page
+    x:Class="AppleMusicRpc.Pages.NowPlayingPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:AppleMusicRpc.Pages"
+    Background="Transparent">
+
+    <Grid RowSpacing="16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <!-- Title -->
+        <TextBlock
+            Grid.Row="0"
+            Text="Now Playing"
+            Style="{StaticResource TitleTextBlockStyle}" />
+
+        <!-- Album Art and Track Info Card -->
+        <Grid Grid.Row="1" ColumnSpacing="20">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="140" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <!-- Album Art -->
+            <Border
+                Grid.Column="0"
+                Width="140" Height="140"
+                CornerRadius="8"
+                Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                BorderThickness="1">
+                <Grid>
+                    <FontIcon
+                        x:Name="PlaceholderIcon"
+                        Glyph="&#xE93C;"
+                        FontSize="48"
+                        Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                    <Image
+                        x:Name="AlbumArtImage"
+                        Stretch="UniformToFill" />
+                </Grid>
+            </Border>
+
+            <!-- Track Info -->
+            <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="4">
+                <TextBlock
+                    x:Name="TrackTitle"
+                    Text="Not playing"
+                    Style="{StaticResource SubtitleTextBlockStyle}"
+                    TextTrimming="CharacterEllipsis"
+                    MaxLines="2" />
+                <TextBlock
+                    x:Name="TrackArtist"
+                    Text="Play something in Apple Music"
+                    Style="{StaticResource BodyTextBlockStyle}"
+                    Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                    TextTrimming="CharacterEllipsis" />
+                <TextBlock
+                    x:Name="TrackAlbum"
+                    Style="{StaticResource CaptionTextBlockStyle}"
+                    Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                    TextTrimming="CharacterEllipsis" />
+
+                <!-- Progress Bar -->
+                <Grid x:Name="ProgressSection" Margin="0,12,0,0" Visibility="Collapsed">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    <ProgressBar
+                        x:Name="TrackProgress"
+                        Grid.Row="0"
+                        Minimum="0"
+                        Maximum="100"
+                        Value="0"
+                        Height="4"
+                        CornerRadius="2" />
+                    <Grid Grid.Row="1" Margin="0,4,0,0">
+                        <TextBlock
+                            x:Name="CurrentTime"
+                            Text="0:00"
+                            Style="{StaticResource CaptionTextBlockStyle}"
+                            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                            HorizontalAlignment="Left" />
+                        <TextBlock
+                            x:Name="RemainingTime"
+                            Text="-0:00"
+                            Style="{StaticResource CaptionTextBlockStyle}"
+                            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                            HorizontalAlignment="Right" />
+                    </Grid>
+                </Grid>
+            </StackPanel>
+        </Grid>
+
+        <!-- Action Buttons - Only visible when track is playing -->
+        <StackPanel x:Name="ActionButtons" Grid.Row="2" Orientation="Horizontal" Spacing="8" Visibility="Collapsed">
+            <Button x:Name="PauseButton" Click="PauseButton_Click">
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <FontIcon x:Name="PauseIcon" Glyph="&#xE769;" FontSize="14" />
+                    <TextBlock x:Name="PauseText" Text="Pause RPC" />
+                </StackPanel>
+            </Button>
+            <Button x:Name="OpenButton" Click="OpenButton_Click" Visibility="Collapsed">
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <FontIcon Glyph="&#xE8A7;" FontSize="14" />
+                    <TextBlock Text="Open in Apple Music" />
+                </StackPanel>
+            </Button>
+        </StackPanel>
+
+        <!-- Last.FM Section with expandable help -->
+        <StackPanel x:Name="LastFmSection" Grid.Row="3" Spacing="8" Visibility="Collapsed">
+            <StackPanel Orientation="Horizontal" Spacing="8">
+                <TextBlock
+                    Text="LAST.FM"
+                    Style="{StaticResource CaptionTextBlockStyle}"
+                    Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                    CharacterSpacing="60"
+                    VerticalAlignment="Center" />
+                <Button
+                    x:Name="LastFmHelpButton"
+                    Click="LastFmHelpButton_Click"
+                    Padding="4"
+                    Background="Transparent"
+                    BorderThickness="0"
+                    ToolTipService.ToolTip="What is Last.fm?">
+                    <FontIcon Glyph="&#xE9CE;" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                </Button>
+            </StackPanel>
+            <TextBlock
+                x:Name="LastFmStatus"
+                Text="Not configured"
+                Style="{StaticResource BodyTextBlockStyle}"
+                Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+
+            <!-- Expandable help info -->
+            <Border
+                x:Name="LastFmHelpPanel"
+                Visibility="Collapsed"
+                Padding="12"
+                CornerRadius="6"
+                Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}"
+                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                BorderThickness="1"
+                Margin="0,4,0,0">
+                <StackPanel Spacing="8">
+                    <TextBlock
+                        Text="Last.fm tracks your listening habits and lets you discover new music based on what you play."
+                        Style="{StaticResource CaptionTextBlockStyle}"
+                        TextWrapping="Wrap"
+                        Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                    <TextBlock
+                        Text="Scrobbling automatically records each song you listen to."
+                        Style="{StaticResource CaptionTextBlockStyle}"
+                        TextWrapping="Wrap"
+                        Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                    <HyperlinkButton
+                        Content="Set up in Settings"
+                        Padding="0"
+                        Click="GoToSettings_Click" />
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </Grid>
+</Page>

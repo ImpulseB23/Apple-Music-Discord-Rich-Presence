@@ -1,0 +1,218 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Page
+    x:Class="AppleMusicRpc.Pages.SettingsPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    Background="Transparent">
+
+    <ScrollViewer VerticalScrollBarVisibility="Hidden">
+        <StackPanel Spacing="24" Padding="0,0,0,24">
+            <!-- Title -->
+            <TextBlock
+                Text="Settings"
+                Style="{StaticResource TitleTextBlockStyle}" />
+
+            <!-- General Section -->
+            <StackPanel Spacing="12">
+                <TextBlock
+                    Text="GENERAL"
+                    Style="{StaticResource CaptionTextBlockStyle}"
+                    Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                    CharacterSpacing="60" />
+
+                <ToggleSwitch
+                    x:Name="StartupToggle"
+                    Header="Start with Windows"
+                    OffContent="Off"
+                    OnContent="On"
+                    Toggled="StartupToggle_Toggled" />
+            </StackPanel>
+
+            <!-- Last.FM Section with expandable setup guide -->
+            <StackPanel Spacing="12">
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <TextBlock
+                        Text="LAST.FM"
+                        Style="{StaticResource CaptionTextBlockStyle}"
+                        Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                        CharacterSpacing="60"
+                        VerticalAlignment="Center" />
+                    <Button
+                        x:Name="SetupHelpButton"
+                        Click="SetupHelpButton_Click"
+                        Padding="4"
+                        Background="Transparent"
+                        BorderThickness="0"
+                        ToolTipService.ToolTip="How to set up Last.fm">
+                        <FontIcon Glyph="&#xE9CE;" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                    </Button>
+                </StackPanel>
+
+                <!-- Expandable setup guide -->
+                <Border
+                    x:Name="SetupGuidePanel"
+                    Visibility="Collapsed"
+                    Padding="16"
+                    CornerRadius="8"
+                    Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}"
+                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                    BorderThickness="1">
+                    <StackPanel Spacing="12">
+                        <TextBlock
+                            Text="How to set up Last.fm scrobbling"
+                            Style="{StaticResource BodyStrongTextBlockStyle}" />
+
+                        <StackPanel Spacing="4">
+                            <TextBlock Style="{StaticResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}">
+                                <Run FontWeight="SemiBold">1.</Run>
+                                <Run>Create a Last.fm account at</Run>
+                                <Hyperlink NavigateUri="https://www.last.fm/join">last.fm/join</Hyperlink>
+                            </TextBlock>
+                            <TextBlock Style="{StaticResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}">
+                                <Run FontWeight="SemiBold">2.</Run>
+                                <Run>Go to</Run>
+                                <Hyperlink NavigateUri="https://www.last.fm/api/account/create">last.fm/api/account/create</Hyperlink>
+                            </TextBlock>
+                            <TextBlock Text="3. Fill in any application name (e.g., 'My Discord RPC')" Style="{StaticResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                            <TextBlock Text="4. Copy the API Key and API Secret below" Style="{StaticResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                            <TextBlock Text="5. Click 'Connect' to authorize the app" Style="{StaticResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                            <TextBlock Text="6. Enable scrobbling to track your music" Style="{StaticResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                        </StackPanel>
+
+                        <TextBlock
+                            Text="Your scrobbles will appear on your Last.fm profile and help personalize music recommendations."
+                            Style="{StaticResource CaptionTextBlockStyle}"
+                            TextWrapping="Wrap"
+                            Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                    </StackPanel>
+                </Border>
+
+                <TextBox
+                    x:Name="ApiKeyInput"
+                    Header="API Key"
+                    PlaceholderText="Enter your Last.FM API key" />
+
+                <PasswordBox
+                    x:Name="ApiSecretInput"
+                    Header="API Secret"
+                    PlaceholderText="Enter your Last.FM API secret" />
+
+                <StackPanel Orientation="Horizontal" Spacing="12">
+                    <Button
+                        x:Name="ConnectButton"
+                        Style="{StaticResource AccentButtonStyle}"
+                        Click="ConnectButton_Click">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <FontIcon Glyph="&#xE703;" FontSize="14" />
+                            <TextBlock Text="Connect" />
+                        </StackPanel>
+                    </Button>
+                    <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                        <Ellipse
+                            x:Name="ConnectionDot"
+                            Width="8" Height="8"
+                            Fill="{ThemeResource TextFillColorTertiaryBrush}" />
+                        <TextBlock
+                            x:Name="ConnectionStatus"
+                            Text="Not connected"
+                            Style="{StaticResource CaptionTextBlockStyle}"
+                            Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                    </StackPanel>
+                </StackPanel>
+
+                <ToggleSwitch
+                    x:Name="ScrobbleToggle"
+                    Header="Enable scrobbling"
+                    OffContent="Off"
+                    OnContent="On" />
+            </StackPanel>
+
+            <!-- Save Button -->
+            <Button
+                x:Name="SaveButton"
+                Style="{StaticResource AccentButtonStyle}"
+                Click="SaveButton_Click">
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <FontIcon Glyph="&#xE74E;" FontSize="14" />
+                    <TextBlock Text="Save Settings" />
+                </StackPanel>
+            </Button>
+
+            <!-- Export Section -->
+            <StackPanel Spacing="12">
+                <TextBlock
+                    Text="EXPORT"
+                    Style="{StaticResource CaptionTextBlockStyle}"
+                    Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                    CharacterSpacing="60" />
+
+                <Border Padding="16" CornerRadius="8"
+                        Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                        BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                        BorderThickness="1">
+                    <StackPanel Spacing="12">
+                        <TextBlock
+                            Text="Export your listening history to a file."
+                            Style="{StaticResource BodyTextBlockStyle}"
+                            Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <Button Click="ExportJson_Click">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <FontIcon Glyph="&#xE8B5;" FontSize="14" />
+                                    <TextBlock Text="Export as JSON" />
+                                </StackPanel>
+                            </Button>
+                            <Button Click="ExportCsv_Click">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <FontIcon Glyph="&#xE8B5;" FontSize="14" />
+                                    <TextBlock Text="Export as CSV" />
+                                </StackPanel>
+                            </Button>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+
+            <!-- Logs Section -->
+            <StackPanel Spacing="12">
+                <TextBlock
+                    Text="LOGS"
+                    Style="{StaticResource CaptionTextBlockStyle}"
+                    Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                    CharacterSpacing="60" />
+
+                <Border Padding="16" CornerRadius="8"
+                        Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                        BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                        BorderThickness="1">
+                    <StackPanel Spacing="12">
+                        <TextBlock
+                            Text="Debug logs for troubleshooting issues."
+                            Style="{StaticResource BodyTextBlockStyle}"
+                            Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <Button Click="ViewLogs_Click">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <FontIcon Glyph="&#xE7C3;" FontSize="14" />
+                                    <TextBlock Text="View Logs" />
+                                </StackPanel>
+                            </Button>
+                            <Button Click="OpenLogFolder_Click">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <FontIcon Glyph="&#xE838;" FontSize="14" />
+                                    <TextBlock Text="Open Log Folder" />
+                                </StackPanel>
+                            </Button>
+                            <Button Click="ClearLogs_Click">
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <FontIcon Glyph="&#xE74D;" FontSize="14" />
+                                    <TextBlock Text="Clear Logs" />
+                                </StackPanel>
+                            </Button>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </StackPanel>
+    </ScrollViewer>
+</Page>

@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Application
+    x:Class="AppleMusicRpc.App"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:AppleMusicRpc"
+    RequestedTheme="Dark">
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <XamlControlsResources xmlns="using:Microsoft.UI.Xaml.Controls" />
+            </ResourceDictionary.MergedDictionaries>
+
+            <!-- Custom accent colors based on Icon.png silver/steel palette -->
+            <Color x:Key="SystemAccentColor">#9E9E9E</Color>
+            <Color x:Key="SystemAccentColorLight1">#B8B8B8</Color>
+            <Color x:Key="SystemAccentColorLight2">#D0D0D0</Color>
+            <Color x:Key="SystemAccentColorLight3">#E8E8E8</Color>
+            <Color x:Key="SystemAccentColorDark1">#808080</Color>
+            <Color x:Key="SystemAccentColorDark2">#606060</Color>
+            <Color x:Key="SystemAccentColorDark3">#404040</Color>
+
+            <!-- Custom brushes -->
+            <SolidColorBrush x:Key="AppAccentBrush" Color="#A0A0A0" />
+            <SolidColorBrush x:Key="AppAccentLightBrush" Color="#C8C8C8" />
+
+            <!-- Status colors -->
+            <SolidColorBrush x:Key="StatusPlayingBrush" Color="#6CCB5F" />
+            <SolidColorBrush x:Key="StatusPausedBrush" Color="#FCB900" />
+            <SolidColorBrush x:Key="StatusErrorBrush" Color="#E81123" />
+            <SolidColorBrush x:Key="StatusIdleBrush" Color="#8C8C8C" />
+        </ResourceDictionary>
+    </Application.Resources>
+</Application>
